@@ -16,6 +16,8 @@ function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [deviceStatuses, setDeviceStatuses] = useState({});
   const [finishedCount, setFinishedCount] = useState(0);
+  const [jobId, setJobId] = useState(null); // Make sure you track the current Job ID
+
 
   useEffect(() => {
     socket.on('ping-progress', (data) => {
@@ -53,10 +55,23 @@ function App() {
       const data = await res.json();
 
       // Join specific job room
+      setJobId(data.jobId); // <--- SAVE THIS ID
       socket.emit('join-job-room', data.jobId);
     } catch (err) {
       console.error(err);
     }
+  };
+
+  const handleCloseModal = () => {
+    // 1. Send cancel signal if job is not finished
+    if (finishedCount < selectedIds.size && jobId) {
+      console.log("Cancelling job:", jobId);
+      socket.emit('cancel-job', jobId);
+    }
+
+    // 2. Close UI
+    setIsModalOpen(false);
+    setJobId(null); // Reset ID
   };
 
   return (
@@ -67,30 +82,30 @@ function App() {
         {/* List */}
         <div style={{ flex: 1, border: '1px solid #ddd', overflowY: 'auto', padding: '10px' }}>
           {MOCK_DEVICES.map(d => (
-            <div 
+            <div
               key={d.id}
               onClick={() => toggleSelection(d.id)}
-              style={{ 
-                padding: '8px', 
+              style={{
+                padding: '8px',
                 cursor: 'pointer',
                 background: selectedIds.has(d.id) ? '#e6f7ff' : 'white',
                 borderBottom: '1px solid #eee'
               }}
             >
-              <input type="checkbox" checked={selectedIds.has(d.id)} readOnly style={{ marginRight: '10px'}} />
-              {d.name} <span style={{ color: '#888', fontSize: '0.9em'}}>({d.ip})</span>
+              <input type="checkbox" checked={selectedIds.has(d.id)} readOnly style={{ marginRight: '10px' }} />
+              {d.name} <span style={{ color: '#888', fontSize: '0.9em' }}>({d.ip})</span>
             </div>
           ))}
         </div>
 
         {/* Controls */}
         <div style={{ width: '200px' }}>
-          <button 
+          <button
             onClick={handleStartPing}
             disabled={selectedIds.size === 0}
-            style={{ 
-              width: '100%', padding: '15px', 
-              background: selectedIds.size > 0 ? '#007bff' : '#ccc', 
+            style={{
+              width: '100%', padding: '15px',
+              background: selectedIds.size > 0 ? '#007bff' : '#ccc',
               color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer'
             }}
           >
@@ -116,7 +131,7 @@ function App() {
                 return (
                   <div key={id} style={{ padding: '8px', borderBottom: '1px solid #f9f9f9', display: 'flex', justifyContent: 'space-between' }}>
                     <span>{device.name}</span>
-                    <span style={{ 
+                    <span style={{
                       fontWeight: 'bold',
                       color: status === 'success' ? 'green' : status === 'failed' ? 'red' : 'orange'
                     }}>
@@ -127,7 +142,12 @@ function App() {
               })}
             </div>
 
-            <button onClick={() => setIsModalOpen(false)} style={{ padding: '10px' }}>Close</button>
+            <button
+              onClick={handleCloseModal} // <--- USE NEW HANDLER
+              style={{ padding: '10px', float: 'right' }}
+            >
+              {finishedCount < selectedIds.size ? 'Cancel & Close' : 'Close'}
+            </button>
           </div>
         </div>
       )}

@@ -21,6 +21,8 @@ const io = new Server(server, {
 const connection = { host: 'localhost', port: 6379 };
 const pingQueue = new Queue('ping-queue', { connection });
 
+const redisClient = new IORedis(connection); // Ensure you have a redis client instance
+
 // 3. Setup Redis Subscriber (The Bridge)
 const redisSubscriber = new IORedis(connection);
 
@@ -56,6 +58,12 @@ io.on('connection', (socket) => {
   socket.on('join-job-room', (jobId) => {
     console.log(`Socket ${socket.id} joined room job-${jobId}`);
     socket.join(`job-${jobId}`);
+  });
+// NEW: Handle Cancellation
+  socket.on('cancel-job', async (jobId) => {
+    console.log(`Received cancellation request for Job ${jobId}`);
+    // Set a flag that expires in 60 seconds (auto-cleanup)
+    await redisClient.set(`cancel-signal:${jobId}`, 'true', 'EX', 60);
   });
 });
 
