@@ -34,7 +34,7 @@ sequenceDiagram
     API->>Redis: Set Key "cancel-signal:55" = true
     Worker->>Redis: Read "cancel-signal:55"
     Worker->>Worker: Stop Loop & Exit
-
+```
 
 ping-demo/
 ├── backend/
