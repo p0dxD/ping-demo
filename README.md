@@ -35,7 +35,7 @@ sequenceDiagram
     Worker->>Redis: Read "cancel-signal:55"
     Worker->>Worker: Stop Loop & Exit
 ```
-
+```text
 ping-demo/
 ├── backend/
 │   ├── server.js      # API & Socket.io Server (The Bridge)
@@ -46,7 +46,7 @@ ping-demo/
     │   ├── App.jsx    # UI Logic & Socket Listeners
     │   └── main.jsx
     └── package.json
-
+```
 # Application Logic & Troubleshooting Guide
 
 ## 🧠 Logic Flow Explained
