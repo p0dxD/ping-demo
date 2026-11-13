@@ -14,7 +14,19 @@ services:
     dockerfile: Dockerfile
   language: node
   name: frontend
+  domain: ping-demo.rendimiento.ai
   path: frontend
   port: 8080
   replicas: 1
   size: small
+# The browser tests (e2e/): rendimiento builds their image with each
+# release and runs them once the release is live. Each test only reports
+# until it passes 5 releases in a row; then a failure of it rolls back.
+builds:
+- name: e2e
+  path: e2e
+tests:
+  build: e2e
+# Each pull request gets a live copy, at
+# ping-demo-pr-<number>.rendimiento.ai, until it is closed.
+previews: {}
